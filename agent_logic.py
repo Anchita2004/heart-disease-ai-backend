@@ -1,3 +1,43 @@
+def normalize_input(data):
+    # Normalize Sex
+    data['sex'] = data.get('sex', '').strip().upper()
+
+    # Normalize Chest Pain Type
+    cp_map = {
+        'Typical Angina': 'TA',
+        'Atypical Angina': 'ATA',
+        'Non-Anginal Pain': 'NAP',
+        'Asymptomatic': 'ASY',
+        'ASY': 'ASY', 'NAP': 'NAP', 'ATA': 'ATA', 'TA': 'TA'
+    }
+    data['ChestPainType'] = cp_map.get(data.get('ChestPainType', '').strip(), data.get('ChestPainType', ''))
+
+    # Normalize Resting ECG
+    ecg_map = {
+        'Normal': 'Normal',
+        'ST-T wave abnormality': 'ST',
+        'Left ventricular hypertrophy': 'LVH',
+        'ST': 'ST',
+        'LVH': 'LVH'
+    }
+    data['RestingECG'] = ecg_map.get(data.get('RestingECG', '').strip(), data.get('RestingECG', ''))
+
+    # Normalize Exercise Angina
+    ea_map = {
+        'Yes': 'Y',
+        'No': 'N',
+        'Y': 'Y',
+        'N': 'N'
+    }
+    data['ExerciseAngina'] = ea_map.get(data.get('ExerciseAngina', '').strip().capitalize(), data.get('ExerciseAngina', ''))
+
+    # Normalize ST_Slope
+    slope_map = {'up': 'Up', 'flat': 'Flat', 'down': 'Down'}
+    data['ST_Slope'] = slope_map.get(data.get('ST_Slope', '').strip().lower(), data.get('ST_Slope', ''))
+
+    return data
+
+
 def assess_risk_explained(row):
     score = 0
     reasons = []
@@ -131,6 +171,8 @@ def get_recommendations_with_explanation(level):
 
 
 def generate_patient_report(patient_data):
+    patient_data = normalize_input(patient_data)
+    print("Normalized Input Data:", patient_data)  # Optional for debugging
     level, score, reasons = assess_risk_explained(patient_data)
     recs = get_recommendations_with_explanation(level)
 
