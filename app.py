@@ -9,6 +9,7 @@ import io
 import os
 import re
 import joblib
+import json
 
 app = FastAPI()
 
@@ -117,8 +118,19 @@ async def upload_report(file: UploadFile = File(...)):
 def parse_text_to_row(text):
     text = text.replace("=", ":").replace(" is ", ":").replace("-", ":").replace("–", ":")
     text = re.sub(r"[ \t]+", " ", text).replace("\n", " ")
-    data = {}
 
+    # ✅ Try parsing as JSON
+    try:
+        json_match = re.search(r"\{.*?\}", text, re.DOTALL)
+        if json_match:
+            json_data = json.loads(json_match.group())
+            print("✅ Parsed structured JSON from OCR")
+            return {k.strip(): str(v).strip() for k, v in json_data.items()}
+    except Exception as e:
+        print(f"⚠️ JSON parsing failed: {e}")
+
+    # ⛔ If JSON fails, fallback to regex
+    data = {}
     patterns = {
         'Age': r"Age[:\-]?\s*(\d+)",
         'Sex': r"Sex[:\-]?\s*([MF])",
