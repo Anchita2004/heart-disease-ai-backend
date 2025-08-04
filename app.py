@@ -8,6 +8,7 @@ from PIL import Image
 import io
 import os
 import re
+import joblib
 
 app = FastAPI()
 
@@ -19,6 +20,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Load the Random Forest model
+rf_model = joblib.load("RandomForest_model.pkl")
+
 @app.get("/")
 def root():
     return {"message": "Heart Disease AI Backend is running."}
@@ -26,7 +30,7 @@ def root():
 # ---- Generate report from manual JSON input ----
 @app.post("/generate-report")
 async def generate_single_report(patient_data: dict):
-    report = generate_patient_report(patient_data)
+    report = generate_patient_report(patient_data, rf_model)
     return {"report": report}
 
 # ---- Generate reports from .csv file ----
@@ -49,7 +53,7 @@ async def generate_batch_report(file: UploadFile = File(...)):
             'Oldpeak': row['Oldpeak'],
             'ST_Slope': row['ST_Slope']
         }
-        report = generate_patient_report(patient)
+        report = generate_patient_report(patient, rf_model)
         reports.append(report)
 
     return {"reports": reports}
@@ -81,7 +85,6 @@ async def upload_report(file: UploadFile = File(...)):
                 if page_text:
                     text += page_text + "\n"
                 else:
-                    # fallback to OCR for scanned PDF
                     image = page.to_image(resolution=300).original
                     text += pytesseract.image_to_string(image) + "\n"
 
@@ -113,7 +116,6 @@ async def upload_report(file: UploadFile = File(...)):
 
 # ---- Flexible regex-based parser for text input from PDF or OCR ----
 def parse_text_to_row(text):
-    # Normalize field separators and clean up extra spacing
     text = text.replace("=", ":").replace(" is ", ":").replace("-", ":").replace("–", ":")
     text = re.sub(r"[ \t]+", " ", text)
     text = text.replace("\n", " ")
