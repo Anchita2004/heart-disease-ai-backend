@@ -30,7 +30,7 @@ def root():
 # ---- Generate report from manual JSON input ----
 @app.post("/generate-report")
 async def generate_single_report(patient_data: dict):
-    report = generate_patient_report(patient_data, rf_model)
+    report = generate_patient_report(patient_data)
     return {"report": report}
 
 # ---- Generate reports from .csv file ----
