@@ -53,7 +53,7 @@ async def generate_batch_report(file: UploadFile = File(...)):
             'Oldpeak': row['Oldpeak'],
             'ST_Slope': row['ST_Slope']
         }
-        report = generate_patient_report(patient, rf_model)
+        report = generate_patient_report(patient)  # ✅ FIXED
         reports.append(report)
 
     return {"reports": reports}
